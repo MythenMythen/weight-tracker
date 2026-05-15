@@ -276,8 +276,9 @@ function todayISO() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function renderHeroWeight(entries, unit, today) {
+function renderHeroWeight(entries, unit, today, averages) {
   const hero = document.getElementById('hero-value');
+  const heroWeek = document.getElementById('hero-week');
   const todayEntry = entries.find(e => e.date === today);
   if (todayEntry) {
     hero.textContent = `${kgToDisplay(todayEntry.weight, unit)} ${unit}`;
@@ -285,6 +286,17 @@ function renderHeroWeight(entries, unit, today) {
   } else {
     hero.textContent = `— ${unit}`;
     hero.classList.add('empty');
+  }
+
+  const currentWeekKey = getISOWeekKey(today);
+  const currentWeek = averages.find(w => w.week === currentWeekKey);
+  if (currentWeek && currentWeek.count > 0) {
+    const avg = kgToDisplay(currentWeek.avg, unit);
+    const days = currentWeek.count;
+    heroWeek.textContent = `Ø diese Woche: ${avg} ${unit} (${days} Tag${days !== 1 ? 'e' : ''})`;
+    heroWeek.hidden = false;
+  } else {
+    heroWeek.hidden = true;
   }
 }
 
@@ -295,7 +307,7 @@ function refresh() {
   const grouped = groupByWeek(entries);
   const averages = computeWeeklyAverages(grouped, today);
 
-  renderHeroWeight(entries, unit, today);
+  renderHeroWeight(entries, unit, today, averages);
   renderChart(averages, unit);
   renderHistory(entries, unit, today);
 }

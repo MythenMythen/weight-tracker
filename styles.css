@@ -34,7 +34,7 @@ header {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   color: #fff;
   padding: 20px 20px 28px;
-  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-top: calc(32px + env(safe-area-inset-top, 0px));
   position: sticky;
   top: 0;
   z-index: 10;
@@ -111,6 +111,14 @@ header h1 .icon {
   background: none;
   -webkit-background-clip: unset;
   background-clip: unset;
+}
+
+.hero-week {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  margin-top: 6px;
+  letter-spacing: 0.01em;
 }
 
 /* ── Layout ─────────────────────────────────────────────────────────────── */
