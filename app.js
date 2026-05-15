@@ -11,14 +11,6 @@ function saveEntries(entries) {
   localStorage.setItem('weight_entries', JSON.stringify(entries));
 }
 
-function loadUnit() {
-  return localStorage.getItem('weight_unit') || 'kg';
-}
-
-function saveUnit(unit) {
-  localStorage.setItem('weight_unit', unit);
-}
-
 function upsertEntry(date, weightKg) {
   const entries = loadEntries();
   const idx = entries.findIndex(e => e.date === date);
@@ -32,14 +24,12 @@ function deleteEntry(date) {
   saveEntries(loadEntries().filter(e => e.date !== date));
 }
 
-// ── Unit conversion ───────────────────────────────────────────────────────────
-
-function kgToDisplay(kg, unit) {
-  return unit === 'lbs' ? +(kg * 2.20462).toFixed(1) : +kg.toFixed(1);
+function kgToDisplay(kg) {
+  return +kg.toFixed(1);
 }
 
-function displayToKg(val, unit) {
-  return unit === 'lbs' ? +(val / 2.20462).toFixed(2) : +parseFloat(val).toFixed(2);
+function displayToKg(val) {
+  return +parseFloat(val).toFixed(2);
 }
 
 // ── ISO week helpers ──────────────────────────────────────────────────────────
@@ -96,7 +86,7 @@ function computeWeeklyAverages(grouped, todayStr) {
 
 let chartInstance = null;
 
-function renderChart(weeklyAverages, unit) {
+function renderChart(weeklyAverages) {
   const wrap = document.getElementById('chart-wrap');
   const empty = document.getElementById('chart-empty');
 
@@ -115,9 +105,9 @@ function renderChart(weeklyAverages, unit) {
     return `${formatDate(monday)}–${formatDate(sunday)}`;
   });
 
-  const dataValues = weeklyAverages.map(w => kgToDisplay(w.avg, unit));
+  const dataValues = weeklyAverages.map(w => kgToDisplay(w.avg));
   const pointBg = weeklyAverages.map(w => w.complete ? '#667eea' : '#fff');
-  const pointBorder = weeklyAverages.map(w => w.complete ? '#667eea' : '#667eea');
+  const pointBorder = weeklyAverages.map(() => '#667eea');
 
   const allVals = dataValues.filter(v => v != null);
   const yMin = allVals.length ? Math.floor(Math.min(...allVals) - 1) : 0;
@@ -138,8 +128,7 @@ function renderChart(weeklyAverages, unit) {
     chartInstance.data.datasets[0].pointBorderColor = pointBorder;
     chartInstance.options.scales.y.min = yMin;
     chartInstance.options.scales.y.max = yMax;
-    chartInstance.options.scales.y.title.text = unit;
-    chartInstance.options.plugins.tooltip.callbacks.label = tooltipLabel(weeklyAverages, unit);
+    chartInstance.options.plugins.tooltip.callbacks.label = tooltipLabel(weeklyAverages);
     chartInstance.update();
     return;
   }
@@ -149,7 +138,7 @@ function renderChart(weeklyAverages, unit) {
     data: {
       labels,
       datasets: [{
-        label: `Ø Gewicht (${unit})`,
+        label: 'Ø Gewicht (kg)',
         data: dataValues,
         borderColor: '#667eea',
         backgroundColor: grad,
@@ -181,7 +170,7 @@ function renderChart(weeklyAverages, unit) {
           padding: 12,
           cornerRadius: 12,
           callbacks: {
-            label: tooltipLabel(weeklyAverages, unit)
+            label: tooltipLabel(weeklyAverages)
           }
         }
       },
@@ -194,7 +183,7 @@ function renderChart(weeklyAverages, unit) {
         y: {
           min: yMin,
           max: yMax,
-          title: { display: true, text: unit, color: '#8892a4', font: { size: 12 } },
+          title: { display: true, text: 'kg', color: '#8892a4', font: { size: 12 } },
           grid: { color: 'rgba(0,0,0,0.05)' },
           border: { display: false },
           ticks: { font: { size: 12 }, color: '#8892a4' }
@@ -204,18 +193,18 @@ function renderChart(weeklyAverages, unit) {
   });
 }
 
-function tooltipLabel(weeklyAverages, unit) {
+function tooltipLabel(weeklyAverages) {
   return function(ctx) {
     const w = weeklyAverages[ctx.dataIndex];
-    const val = kgToDisplay(w.avg, unit);
+    const val = kgToDisplay(w.avg);
     const suffix = w.complete ? '' : ' (laufend)';
-    return ` ${val} ${unit}  (${w.count} Tag${w.count !== 1 ? 'e' : ''})${suffix}`;
+    return ` ${val} kg  (${w.count} Tag${w.count !== 1 ? 'e' : ''})${suffix}`;
   };
 }
 
 // ── History list ──────────────────────────────────────────────────────────────
 
-function renderHistory(entries, unit, todayStr) {
+function renderHistory(entries, todayStr) {
   const list = document.getElementById('history-list');
   const empty = document.getElementById('history-empty');
   const recent = [...entries].reverse().slice(0, 14);
@@ -237,12 +226,10 @@ function renderHistory(entries, unit, todayStr) {
 
     const dateObj = new Date(e.date + 'T12:00:00');
     const dateLabel = dateObj.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
-    const displayWeight = kgToDisplay(e.weight, unit);
-
     li.innerHTML = `
       <div class="item-left">
         <div class="item-date">${dateLabel}${isToday ? '<span class="today-badge">Heute</span>' : ''}</div>
-        <div class="item-weight">${displayWeight} ${unit}</div>
+        <div class="item-weight">${kgToDisplay(e.weight)} kg</div>
       </div>
       <button class="btn-delete" aria-label="Eintrag löschen" data-date="${e.date}">✕</button>
     `;
@@ -276,24 +263,24 @@ function todayISO() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function renderHeroWeight(entries, unit, today, averages) {
+function renderHeroWeight(entries, today, averages) {
   const hero = document.getElementById('hero-value');
   const heroWeek = document.getElementById('hero-week');
   const todayEntry = entries.find(e => e.date === today);
   if (todayEntry) {
-    hero.textContent = `${kgToDisplay(todayEntry.weight, unit)} ${unit}`;
+    hero.textContent = `${kgToDisplay(todayEntry.weight)} kg`;
     hero.classList.remove('empty');
   } else {
-    hero.textContent = `— ${unit}`;
+    hero.textContent = '— kg';
     hero.classList.add('empty');
   }
 
   const currentWeekKey = getISOWeekKey(today);
   const currentWeek = averages.find(w => w.week === currentWeekKey);
   if (currentWeek && currentWeek.count > 0) {
-    const avg = kgToDisplay(currentWeek.avg, unit);
+    const avg = kgToDisplay(currentWeek.avg);
     const days = currentWeek.count;
-    heroWeek.textContent = `Ø diese Woche: ${avg} ${unit} (${days} Tag${days !== 1 ? 'e' : ''})`;
+    heroWeek.textContent = `Ø diese Woche: ${avg} kg (${days} Tag${days !== 1 ? 'e' : ''})`;
     heroWeek.hidden = false;
   } else {
     heroWeek.hidden = true;
@@ -302,14 +289,13 @@ function renderHeroWeight(entries, unit, today, averages) {
 
 function refresh() {
   const entries = loadEntries();
-  const unit = loadUnit();
   const today = todayISO();
   const grouped = groupByWeek(entries);
   const averages = computeWeeklyAverages(grouped, today);
 
-  renderHeroWeight(entries, unit, today, averages);
-  renderChart(averages, unit);
-  renderHistory(entries, unit, today);
+  renderHeroWeight(entries, today, averages);
+  renderChart(averages);
+  renderHistory(entries, today);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -318,62 +304,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('entry-form');
   const dateInput = document.getElementById('date-input');
   const weightInput = document.getElementById('weight-input');
-  const unitToggle = document.getElementById('unit-toggle');
 
-  // Set today as default date
   dateInput.value = todayISO();
 
-  // Pre-fill today's weight if exists
   function prefillWeight() {
     const entries = loadEntries();
-    const unit = loadUnit();
-    const today = todayISO();
-    const date = dateInput.value || today;
+    const date = dateInput.value || todayISO();
     const existing = entries.find(e => e.date === date);
-    if (existing) {
-      weightInput.value = kgToDisplay(existing.weight, unit);
-    } else {
-      weightInput.value = '';
-    }
+    weightInput.value = existing ? kgToDisplay(existing.weight) : '';
   }
 
   dateInput.addEventListener('change', prefillWeight);
 
-  // Unit toggle
-  function applyUnit(unit) {
-    unitToggle.textContent = unit;
-    document.querySelectorAll('.unit-label').forEach(el => el.textContent = unit);
-    weightInput.placeholder = unit === 'lbs' ? '0.0 lbs' : '0.0';
-    prefillWeight();
-    refresh();
-  }
-
-  unitToggle.addEventListener('click', () => {
-    const newUnit = loadUnit() === 'kg' ? 'lbs' : 'kg';
-    saveUnit(newUnit);
-    applyUnit(newUnit);
-  });
-
-  // Form submit
   form.addEventListener('submit', e => {
     e.preventDefault();
     const date = dateInput.value;
     const rawVal = parseFloat(weightInput.value.replace(',', '.'));
     if (!date || isNaN(rawVal) || rawVal < 20 || rawVal > 400) return;
-    const unit = loadUnit();
-    const kg = displayToKg(rawVal, unit);
+    const kg = displayToKg(rawVal);
     upsertEntry(date, kg);
     refresh();
     showToast('Gewicht gespeichert ✓');
-    weightInput.value = kgToDisplay(kg, unit);
+    weightInput.value = kgToDisplay(kg);
   });
 
-  // Service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 
-  applyUnit(loadUnit());
   prefillWeight();
   refresh();
 });

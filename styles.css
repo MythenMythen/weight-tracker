@@ -60,22 +60,6 @@ header h1 .icon {
   font-size: 1.3rem;
 }
 
-#unit-toggle {
-  background: rgba(255,255,255,0.12);
-  border: 1.5px solid rgba(255,255,255,0.22);
-  color: #fff;
-  border-radius: 50px;
-  padding: 7px 18px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  letter-spacing: 0.03em;
-  backdrop-filter: blur(10px);
-  transition: background 0.2s, border-color 0.2s;
-}
-#unit-toggle:active {
-  background: rgba(255,255,255,0.25);
-}
 
 /* Hero weight display in header */
 .hero-weight {
