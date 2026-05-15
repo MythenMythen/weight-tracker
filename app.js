@@ -358,8 +358,8 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', e => {
     e.preventDefault();
     const date = dateInput.value;
-    const rawVal = parseFloat(weightInput.value);
-    if (!date || isNaN(rawVal) || rawVal <= 0) return;
+    const rawVal = parseFloat(weightInput.value.replace(',', '.'));
+    if (!date || isNaN(rawVal) || rawVal < 20 || rawVal > 400) return;
     const unit = loadUnit();
     const kg = displayToKg(rawVal, unit);
     upsertEntry(date, kg);
