@@ -116,16 +116,20 @@ function renderChart(weeklyAverages, unit) {
   });
 
   const dataValues = weeklyAverages.map(w => kgToDisplay(w.avg, unit));
-  const borderDash = weeklyAverages.map(w => w.complete ? [] : [6, 4]);
-  const pointStyles = weeklyAverages.map(w => w.complete ? 'circle' : 'circle');
-  const pointBg = weeklyAverages.map(w => w.complete ? '#4f8ef7' : '#fff');
-  const pointBorder = weeklyAverages.map(w => w.complete ? '#4f8ef7' : '#4f8ef7');
+  const pointBg = weeklyAverages.map(w => w.complete ? '#667eea' : '#fff');
+  const pointBorder = weeklyAverages.map(w => w.complete ? '#667eea' : '#667eea');
 
   const allVals = dataValues.filter(v => v != null);
   const yMin = allVals.length ? Math.floor(Math.min(...allVals) - 1) : 0;
   const yMax = allVals.length ? Math.ceil(Math.max(...allVals) + 1) : 100;
 
-  const ctx = document.getElementById('weight-chart').getContext('2d');
+  const canvasEl = document.getElementById('weight-chart');
+  const ctx = canvasEl.getContext('2d');
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, 220);
+  grad.addColorStop(0, 'rgba(102,126,234,0.22)');
+  grad.addColorStop(1, 'rgba(118,75,162,0.02)');
 
   if (chartInstance) {
     chartInstance.data.labels = labels;
@@ -147,16 +151,16 @@ function renderChart(weeklyAverages, unit) {
       datasets: [{
         label: `Ø Gewicht (${unit})`,
         data: dataValues,
-        borderColor: '#4f8ef7',
-        backgroundColor: 'rgba(79,142,247,0.08)',
-        borderWidth: 2.5,
+        borderColor: '#667eea',
+        backgroundColor: grad,
+        borderWidth: 3,
         pointBackgroundColor: pointBg,
         pointBorderColor: pointBorder,
-        pointBorderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 8,
+        pointBorderWidth: 2.5,
+        pointRadius: 7,
+        pointHoverRadius: 9,
         fill: true,
-        tension: 0.35,
+        tension: 0.4,
         segment: {
           borderDash: ctx => {
             const idx = ctx.p1DataIndex;
@@ -171,6 +175,11 @@ function renderChart(weeklyAverages, unit) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: '#1a1a2e',
+          titleColor: 'rgba(255,255,255,0.6)',
+          bodyColor: '#fff',
+          padding: 12,
+          cornerRadius: 12,
           callbacks: {
             label: tooltipLabel(weeklyAverages, unit)
           }
@@ -179,14 +188,16 @@ function renderChart(weeklyAverages, unit) {
       scales: {
         x: {
           grid: { color: 'rgba(0,0,0,0.04)' },
-          ticks: { font: { size: 11 }, color: '#6b7280', maxRotation: 30 }
+          border: { display: false },
+          ticks: { font: { size: 11 }, color: '#8892a4', maxRotation: 30 }
         },
         y: {
           min: yMin,
           max: yMax,
-          title: { display: true, text: unit, color: '#6b7280', font: { size: 12 } },
-          grid: { color: 'rgba(0,0,0,0.06)' },
-          ticks: { font: { size: 12 }, color: '#6b7280' }
+          title: { display: true, text: unit, color: '#8892a4', font: { size: 12 } },
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          border: { display: false },
+          ticks: { font: { size: 12 }, color: '#8892a4' }
         }
       }
     }
@@ -221,17 +232,17 @@ function renderHistory(entries, unit, todayStr) {
 
   for (const e of recent) {
     const li = document.createElement('li');
-    li.className = 'history-item';
+    const isToday = e.date === todayStr;
+    li.className = 'history-item' + (isToday ? ' is-today' : '');
 
     const dateObj = new Date(e.date + 'T12:00:00');
-    const dateLabel = dateObj.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-    const isToday = e.date === todayStr;
+    const dateLabel = dateObj.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
     const displayWeight = kgToDisplay(e.weight, unit);
 
     li.innerHTML = `
-      <div>
-        <div class="date">${dateLabel}${isToday ? '<span class="today-badge">Heute</span>' : ''}</div>
-        <div class="weight-val">${displayWeight} ${unit}</div>
+      <div class="item-left">
+        <div class="item-date">${dateLabel}${isToday ? '<span class="today-badge">Heute</span>' : ''}</div>
+        <div class="item-weight">${displayWeight} ${unit}</div>
       </div>
       <button class="btn-delete" aria-label="Eintrag löschen" data-date="${e.date}">✕</button>
     `;
@@ -265,6 +276,18 @@ function todayISO() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+function renderHeroWeight(entries, unit, today) {
+  const hero = document.getElementById('hero-value');
+  const todayEntry = entries.find(e => e.date === today);
+  if (todayEntry) {
+    hero.textContent = `${kgToDisplay(todayEntry.weight, unit)} ${unit}`;
+    hero.classList.remove('empty');
+  } else {
+    hero.textContent = `— ${unit}`;
+    hero.classList.add('empty');
+  }
+}
+
 function refresh() {
   const entries = loadEntries();
   const unit = loadUnit();
@@ -272,6 +295,7 @@ function refresh() {
   const grouped = groupByWeek(entries);
   const averages = computeWeeklyAverages(grouped, today);
 
+  renderHeroWeight(entries, unit, today);
   renderChart(averages, unit);
   renderHistory(entries, unit, today);
 }
@@ -334,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 
   applyUnit(loadUnit());

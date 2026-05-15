@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Gewichtstracker</title>
 
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#4f8ef7">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a1a2e">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Gewicht">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
@@ -16,13 +16,19 @@
 </head>
 <body>
   <header>
-    <h1>Gewichtstracker</h1>
-    <button id="unit-toggle" aria-label="Einheit umschalten">kg</button>
+    <div class="header-top">
+      <h1><span class="icon">⚖️</span> Gewichtstracker</h1>
+      <button id="unit-toggle" aria-label="Einheit umschalten">kg</button>
+    </div>
+    <div class="hero-weight">
+      <div class="hero-label">Aktuelles Gewicht</div>
+      <div class="hero-value empty" id="hero-value">— kg</div>
+    </div>
   </header>
 
   <main>
     <section class="card" id="entry-section">
-      <h2>Eintrag</h2>
+      <div class="card-title">Eintrag</div>
       <form id="entry-form">
         <div class="form-row">
           <label for="date-input">Datum</label>
@@ -37,9 +43,10 @@
     </section>
 
     <section class="card" id="chart-section">
-      <h2>Wochendurchschnitt</h2>
+      <div class="card-title">Wochendurchschnitt</div>
       <div id="chart-empty" class="empty-state" hidden>
-        Noch keine abgeschlossenen Wochen — trage täglich dein Gewicht ein.
+        <span class="empty-icon">📈</span>
+        Noch keine abgeschlossenen Wochen —<br>trage täglich dein Gewicht ein.
       </div>
       <div id="chart-wrap">
         <canvas id="weight-chart"></canvas>
@@ -47,9 +54,10 @@
     </section>
 
     <section class="card" id="history-section">
-      <h2>Letzte Einträge</h2>
+      <div class="card-title">Letzte Einträge</div>
       <div id="history-empty" class="empty-state">
-        Noch keine Einträge — füge deinen ersten Eintrag oben hinzu.
+        <span class="empty-icon">📝</span>
+        Noch keine Einträge —<br>füge deinen ersten Eintrag oben hinzu.
       </div>
       <ul id="history-list" hidden></ul>
     </section>
