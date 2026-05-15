@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Gewichtstracker</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4f8ef7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Gewicht">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Gewichtstracker</h1>
+    <button id="unit-toggle" aria-label="Einheit umschalten">kg</button>
+  </header>
+
+  <main>
+    <section class="card" id="entry-section">
+      <h2>Eintrag</h2>
+      <form id="entry-form">
+        <div class="form-row">
+          <label for="date-input">Datum</label>
+          <input type="date" id="date-input" required>
+        </div>
+        <div class="form-row">
+          <label for="weight-input">Gewicht (<span class="unit-label">kg</span>)</label>
+          <input type="number" id="weight-input" min="20" max="400" step="0.1" placeholder="0.0" required>
+        </div>
+        <button type="submit" class="btn-primary">Speichern</button>
+      </form>
+    </section>
+
+    <section class="card" id="chart-section">
+      <h2>Wochendurchschnitt</h2>
+      <div id="chart-empty" class="empty-state" hidden>
+        Noch keine abgeschlossenen Wochen — trage täglich dein Gewicht ein.
+      </div>
+      <div id="chart-wrap">
+        <canvas id="weight-chart"></canvas>
+      </div>
+    </section>
+
+    <section class="card" id="history-section">
+      <h2>Letzte Einträge</h2>
+      <div id="history-empty" class="empty-state">
+        Noch keine Einträge — füge deinen ersten Eintrag oben hinzu.
+      </div>
+      <ul id="history-list" hidden></ul>
+    </section>
+  </main>
+
+  <div id="toast" role="alert" aria-live="polite"></div>
+
+  <script src="chart.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
